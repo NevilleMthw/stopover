@@ -22,6 +22,8 @@ import {
   Zap,
   DollarSign,
   Award,
+  CalendarDays,
+  Users,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
@@ -285,28 +287,6 @@ const airlines = [...new Set(flightResults.map((flight) => flight.airline))]
 // Sort options
 type SortOption = "best" | "cheapest" | "fastest"
 
-// Custom hook to detect if on mobile
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
-    }
-
-    // Initial check
-    checkIfMobile()
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkIfMobile)
-
-    // Cleanup
-    return () => window.removeEventListener("resize", checkIfMobile)
-  }, [])
-
-  return isMobile
-}
-
 export default function FlightBooking() {
   const [tripType, setTripType] = useState("one-way")
   const [showResults, setShowResults] = useState(false)
@@ -321,8 +301,28 @@ export default function FlightBooking() {
   const [sortOption, setSortOption] = useState<SortOption>("best")
   const [currentPage, setCurrentPage] = useState(1)
   const resultsRef = useRef<HTMLDivElement>(null)
-  const isMobile = useIsMobile()
+  const [isMobile, setIsMobile] = useState(false)
   const resultsPerPage = 5
+  const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 1024
+      setIsMobile(mobile)
+      if (mobile) {
+        setShowAllAirlines(true) // Always show all airlines on mobile
+      }
+    }
+
+    // Initial check
+    checkIfMobile()
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkIfMobile)
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkIfMobile)
+  }, [])
 
   const handleSearch = () => {
     setShowResults(true)
@@ -335,6 +335,7 @@ export default function FlightBooking() {
     })
     setSortOption("best")
     setCurrentPage(1)
+    setShowFilters(false)
 
     // Use setTimeout to ensure the results are rendered before scrolling
     setTimeout(() => {
@@ -413,8 +414,8 @@ export default function FlightBooking() {
   // Check if any filters are active
   const hasActiveFilters = filters.checkedBag || filters.handBaggage || filters.airlines.length > 0
 
-  // Display a limited number of airlines initially
-  const displayedAirlines = showAllAirlines ? airlines : airlines.slice(0, 6)
+  // Display a limited number of airlines initially, but show all on mobile
+  const displayedAirlines = isMobile || showAllAirlines ? airlines : airlines.slice(0, 6)
   const hasMoreAirlines = airlines.length > 6
 
   return (
@@ -570,35 +571,47 @@ export default function FlightBooking() {
               </div>
             </div>
 
-            {/* Collapsible search panel */}
+            {/* Collapsible search panel - Improved for mobile */}
             <div className="border-t border-gray-100">
-              {/* Collapsed search summary bar */}
+              {/* Collapsed search summary bar - more visible and mobile-friendly */}
               <div
-                className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer bg-gray-50 border-b border-gray-100 hover:bg-gray-100 transition-colors"
                 onClick={() => setExpandedSearch(!expandedSearch)}
               >
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <span className="font-medium">Toronto (YYZ)</span>
-                    <span className="mx-2">→</span>
-                    <span className="font-medium">Seattle (SEA)</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span>Dec 20, 2023</span>
-                    {tripType === "round-trip" && <span> - Mar 26, 2024</span>}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span>2 Adults, 1 Child</span>
+                {/* Mobile-optimized layout */}
+                <div className="w-full sm:w-auto">
+                  {/* Route info */}
+                  <div className="flex items-center mb-2 sm:mb-0">
+                    <div className="flex items-center">
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <div className="flex items-center">
+                          <span className="font-medium">Toronto (YYZ)</span>
+                          <span className="mx-2">→</span>
+                          <span className="font-medium">Seattle (SEA)</span>
+                        </div>
+
+                        {/* Date and passengers - stacked on mobile, inline on desktop */}
+                        <div className="flex items-center mt-2 sm:mt-0 sm:ml-4 text-sm text-gray-500">
+                          <CalendarDays size={14} className="mr-1 hidden sm:inline" />
+                          <span>Dec 20, 2023</span>
+                          <span className="mx-2 hidden sm:inline">•</span>
+                          <Users size={14} className="mr-1 ml-2 sm:ml-0 hidden sm:inline" />
+                          <span>2 Adults, 1 Child</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center">
+
+                {/* Edit button - full width on mobile */}
+                <button className="flex items-center justify-center bg-white border border-gray-200 px-3 py-1.5 rounded-lg w-full sm:w-auto mt-2 sm:mt-0">
                   <span className="text-sm mr-2">{expandedSearch ? "Hide search" : "Edit search"}</span>
                   {expandedSearch ? (
                     <ChevronUp size={16} className="text-gray-500" />
                   ) : (
                     <ChevronDown size={16} className="text-gray-500" />
                   )}
-                </div>
+                </button>
               </div>
 
               {/* Expanded search panel */}
@@ -746,94 +759,123 @@ export default function FlightBooking() {
                       </div>
                     </div>
 
-                    {/* Filters section - always expanded */}
-                    <div className="bg-white rounded-xl p-4 mb-6 border border-gray-100">
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center">
-                          <Filter size={16} className="mr-2" />
-                          <h3 className="font-medium">Filters</h3>
-                        </div>
+                    {/* Mobile-optimized filter button */}
+                    <div className="mb-4">
+                      <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="w-full sm:w-auto flex items-center justify-center bg-white border border-gray-200 px-4 py-3 rounded-lg shadow-sm"
+                      >
+                        <Filter size={16} className="mr-2" />
+                        <span className="font-medium">Filters</span>
                         {hasActiveFilters && (
-                          <button
-                            onClick={clearFilters}
-                            className="text-sm text-gray-500 flex items-center hover:text-black"
-                          >
-                            <X size={14} className="mr-1" />
-                            Clear all
-                          </button>
+                          <div className="ml-2 bg-lime-100 text-lime-700 text-xs px-2 py-0.5 rounded-full">
+                            {Object.values(filters).flat().filter(Boolean).length}
+                          </div>
                         )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Baggage filters */}
-                        <div>
-                          <h4 className="text-sm font-medium mb-2">Baggage</h4>
-                          <div className="space-y-2">
-                            <div
-                              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
-                                filters.checkedBag ? "bg-lime-50 border border-lime-200" : "border border-gray-200"
-                              }`}
-                              onClick={() => toggleFilter("checkedBag")}
-                            >
-                              <div className="flex items-center">
-                                <Luggage size={16} className="mr-2 text-gray-500" />
-                                <span className="text-sm">Checked bag included</span>
-                              </div>
-                              {filters.checkedBag && <Check size={16} className="text-lime-600" />}
-                            </div>
-                            <div
-                              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
-                                filters.handBaggage ? "bg-lime-50 border border-lime-200" : "border border-gray-200"
-                              }`}
-                              onClick={() => toggleFilter("handBaggage")}
-                            >
-                              <div className="flex items-center">
-                                <Briefcase size={16} className="mr-2 text-gray-500" />
-                                <span className="text-sm">Hand baggage included</span>
-                              </div>
-                              {filters.handBaggage && <Check size={16} className="text-lime-600" />}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Airlines filter */}
-                        <div className="md:col-span-2">
-                          <h4 className="text-sm font-medium mb-2">Airlines</h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
-                            {displayedAirlines.map((airline) => (
-                              <div
-                                key={airline}
-                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
-                                  filters.airlines.includes(airline)
-                                    ? "bg-lime-50 border border-lime-200"
-                                    : "border border-gray-200"
-                                }`}
-                                onClick={() => toggleAirlineFilter(airline)}
-                              >
-                                <span className="text-sm">{airline}</span>
-                                {filters.airlines.includes(airline) && <Check size={16} className="text-lime-600" />}
-                              </div>
-                            ))}
-                          </div>
-                          {hasMoreAirlines && !showAllAirlines && (
-                            <button
-                              onClick={() => setShowAllAirlines(true)}
-                              className="mt-2 text-sm text-lime-600 hover:text-lime-700"
-                            >
-                              Show all airlines
-                            </button>
-                          )}
-                          {showAllAirlines && (
-                            <button
-                              onClick={() => setShowAllAirlines(false)}
-                              className="mt-2 text-sm text-lime-600 hover:text-lime-700"
-                            >
-                              Show less
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                        {showFilters ? (
+                          <ChevronUp size={16} className="ml-2 text-gray-500" />
+                        ) : (
+                          <ChevronDown size={16} className="ml-2 text-gray-500" />
+                        )}
+                      </button>
                     </div>
+
+                    {/* Filters section - collapsible */}
+                    {showFilters && (
+                      <div className="bg-white rounded-xl border border-gray-100 mb-6 overflow-hidden">
+                        <div className="p-4 flex justify-between items-center border-b border-gray-100">
+                          <div className="flex items-center">
+                            <Filter size={16} className="mr-2" />
+                            <h3 className="font-medium">Filters</h3>
+                          </div>
+                          {hasActiveFilters && (
+                            <button
+                              onClick={clearFilters}
+                              className="text-sm text-gray-500 flex items-center hover:text-black"
+                            >
+                              <X size={14} className="mr-1" />
+                              Clear all
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="p-4">
+                          {/* Baggage filters */}
+                          <div className="mb-6">
+                            <h4 className="text-sm font-medium mb-3">Baggage</h4>
+                            <div className="space-y-3">
+                              <div
+                                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer ${
+                                  filters.checkedBag ? "bg-lime-50 border border-lime-200" : "border border-gray-200"
+                                }`}
+                                onClick={() => toggleFilter("checkedBag")}
+                              >
+                                <div className="flex items-center">
+                                  <Luggage size={16} className="mr-2 text-gray-500" />
+                                  <span className="text-sm">Checked bag included</span>
+                                </div>
+                                {filters.checkedBag && <Check size={16} className="text-lime-600" />}
+                              </div>
+                              <div
+                                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer ${
+                                  filters.handBaggage ? "bg-lime-50 border border-lime-200" : "border border-gray-200"
+                                }`}
+                                onClick={() => toggleFilter("handBaggage")}
+                              >
+                                <div className="flex items-center">
+                                  <Briefcase size={16} className="mr-2 text-gray-500" />
+                                  <span className="text-sm">Hand baggage included</span>
+                                </div>
+                                {filters.handBaggage && <Check size={16} className="text-lime-600" />}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Airlines filter */}
+                          <div>
+                            <h4 className="text-sm font-medium mb-3">Airlines</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
+                              {displayedAirlines.map((airline) => (
+                                <div
+                                  key={airline}
+                                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer ${
+                                    filters.airlines.includes(airline)
+                                      ? "bg-lime-50 border border-lime-200"
+                                      : "border border-gray-200"
+                                  }`}
+                                  onClick={() => toggleAirlineFilter(airline)}
+                                >
+                                  <span className="text-sm">{airline}</span>
+                                  {filters.airlines.includes(airline) && <Check size={16} className="text-lime-600" />}
+                                </div>
+                              ))}
+                            </div>
+                            {hasMoreAirlines && !showAllAirlines && !isMobile && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setShowAllAirlines(true)
+                                }}
+                                className="mt-3 text-sm text-lime-600 hover:text-lime-700"
+                              >
+                                Show all airlines
+                              </button>
+                            )}
+                            {showAllAirlines && !isMobile && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setShowAllAirlines(false)
+                                }}
+                                className="mt-3 text-sm text-lime-600 hover:text-lime-700"
+                              >
+                                Show less
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Active filters display */}
                     {hasActiveFilters && (
