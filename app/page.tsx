@@ -27,6 +27,8 @@ import {
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
+import Link from "next/link"
+
 
 // Enhanced flight data with baggage information
 const flightResults = [
@@ -434,31 +436,12 @@ export default function FlightBooking() {
         // Landing page layout (before search) - No scrollbar
         <div className="relative z-10 h-screen flex flex-col">
           {/* Header */}
-          <header className="container mx-auto py-4 px-4 md:px-8">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <Plane className="mr-2" />
-                <span className="font-bold text-xl">Xeno</span>
-              </div>
-              <div className="flex items-center space-x-6">
-                <a href="#" className="hidden md:block text-gray-600 hover:text-black">
-                  Flights
-                </a>
-                <a href="#" className="hidden md:block text-gray-600 hover:text-black">
-                  Hotels
-                </a>
-                <a href="#" className="hidden md:block text-gray-600 hover:text-black">
-                  Car Rentals
-                </a>
-                <div className="flex items-center bg-gray-100 rounded-full px-3 py-1.5">
-                  <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center mr-2">
-                    <User size={14} />
-                  </div>
-                  <span className="mr-1">Surja</span>
-                  <ChevronDown size={16} />
-                </div>
-              </div>
-            </div>
+          <header className="flex h-16 w-full items-center justify-between px-4 md:px-6 border-b-2">
+            <Link className="flex items-center gap-2 text-lg font-semibold md:text-base" href="https://stopover.in">
+              <Plane className="h-6 w-6" />
+              <span className="sr-only">Stopover</span>
+              <span>Stopover</span>
+            </Link>
           </header>
 
           {/* Form centered in the page */}
@@ -554,22 +537,18 @@ export default function FlightBooking() {
           </div>
         </div>
       ) : (
+        
+
         // Search results layout (after search)
         <div className="container mx-auto py-10 px-4 md:px-8 relative z-10">
           <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-            <div className="p-6 flex justify-between items-center">
-              <div className="flex items-center">
-                <Plane className="mr-2" />
-                <span className="font-bold">Xeno</span>
-              </div>
-              <div className="flex items-center bg-gray-100 rounded-full px-3 py-1.5">
-                <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center mr-2">
-                  <User size={14} />
-                </div>
-                <span className="mr-1">Surja</span>
-                <ChevronDown size={16} />
-              </div>
-            </div>
+            <header className="flex h-16 w-full items-center justify-between px-4 md:px-6 border-b-1">
+              <Link className="flex items-center gap-2 text-lg font-semibold md:text-base" href="https://stopover.in">
+                <Plane className="h-6 w-6" />
+                <span className="sr-only">Stopover</span>
+                <span>Stopover</span>
+              </Link>
+            </header>
 
             {/* Collapsible search panel - Improved for mobile */}
             <div className="border-t border-gray-100">
