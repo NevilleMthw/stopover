@@ -1,30 +1,40 @@
-# Exact replica needed
+# Stopover Frontend
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+Using Nextjs, currently under development and deployment changes are being made.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/nevillemthws-projects/v0-exact-replica-needed)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/M4CEeZfyBBD)
+## Setup and Installation
 
-## Overview
+```git clone <repo-url>```
+```cd stopover```
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Install Dependencies
 
-## Deployment
+```pnpm install```
+or
+```npm install```
 
-Your project is live at:
+Additionally approve build scripts for sharp: ```pnpm approve-builds```
+## Run Development Server
 
-**[https://vercel.com/nevillemthws-projects/v0-exact-replica-needed](https://vercel.com/nevillemthws-projects/v0-exact-replica-needed)**
+```npm run dev```
+or
+```pnpm run dev```
 
-## Build your app
+Open http://localhost:3000 in your browser.
 
-Continue building your app on:
+## Project Structure
 
-**[https://v0.dev/chat/projects/M4CEeZfyBBD](https://v0.dev/chat/projects/M4CEeZfyBBD)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+```
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── loading.tsx
+│   └── page.tsx
+├── components/
+│   ├── ui/
+│   └── theme-provider.tsx
+├── lib/
+│   └── utils.ts
+├── public/
+└── styles/
+```
