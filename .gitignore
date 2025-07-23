@@ -31,3 +31,5 @@ next-env.d.ts
 
 # pnpm files
 pnpm-workspace.yaml
+
+.idea/
