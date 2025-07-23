@@ -30,6 +30,7 @@ next-env.d.ts
 .history
 
 # pnpm files
-pnpm-workspace.yaml
+frontend/pnpm-workspace.yaml
+frontend/pnpm-lock.yaml
 
 .idea/
