@@ -37,3 +37,4 @@ frontend/pnpm-lock.yaml
 
 backend/go.mod
 backend/go.sum
+backend/aviasales.log
