@@ -1,4 +1,4 @@
-package aviasales
+package main
 
 type PassengerInfo struct {
 	Adults   int `json:"adults"`

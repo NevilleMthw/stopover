@@ -1,7 +1,6 @@
 package main
 
 import (
-	"aviasales/aviasales"
 	"context"
 	"log"
 	"os"
@@ -11,7 +10,7 @@ import (
 )
 
 func main() {
-	aviasales.InitLogger("aviasales.log")
+	InitLogger("aviasales.log")
 
 	log.Println("Starting Aviasales API client")
 
@@ -31,25 +30,25 @@ func main() {
 	log.Printf("Token: %s\nMarker: %s\nHost: %s", token, marker, host)
 
 	// Initialize client with your token, marker, host
-	client := aviasales.NewClient(token, marker, host)
+	client := NewClient(token, marker, host)
 
 	// Prepare your search request (populate with real data)
-	req := aviasales.FlightSearchRequest{
+	req := FlightSearchRequest{
 		Marker:    marker,           // Your partner marker
 		Host:      host,             // The host from which the search is performed
 		UserIP:    "73.115.209.223", // User's IP address
 		Locale:    "en",             // Language for the search results
 		TripClass: "Y",              // Economy class. Use "B" for Business, "F" for First Class
-		Passengers: aviasales.PassengerInfo{
+		Passengers: PassengerInfo{
 			Adults:   1,
 			Children: 0,
 			Infants:  0,
 		},
-		Segments: []aviasales.Segment{
+		Segments: []Segment{
 			{
-				Origin:      "DEL",        // Example: John F. Kennedy International Airport
-				Destination: "COK",        // Example: Los Angeles International Airport
-				Date:        "2025-07-23", // Date of the flight in YYYY-MM-DD format
+				Origin:      "DEL",        // Delhi Airport
+				Destination: "COK",        // Cochin Airport
+				Date:        "2025-07-26", // Date should be within reasonable future date
 			},
 		},
 	}
@@ -57,7 +56,7 @@ func main() {
 	log.Printf("Request provided: %+v", req)
 
 	// Generate the signature and add it to the request
-	req.Signature = aviasales.GenerateSignature(
+	req.Signature = GenerateSignature(
 		token,
 		req.Marker,
 		req.Host,

@@ -1,4 +1,4 @@
-package aviasales
+package main
 
 import (
 	"crypto/md5"
