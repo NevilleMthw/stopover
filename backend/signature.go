@@ -7,7 +7,6 @@ import (
 )
 
 func GenerateSignature(token, marker, host, locale, tripClass, userIP string, passengers PassengerInfo, segments []Segment) string {
-	// Assemble the full string in exact value order
 	parts := []string{
 		host,
 		locale,

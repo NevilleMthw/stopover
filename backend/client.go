@@ -57,7 +57,6 @@ func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*Flig
 	}
 
 	// Generate signature
-	//	req.Signature = GenerateSignature(c.Token, c.Marker, signParams)
 	req.Signature = GenerateSignature(
 		c.Token,
 		c.Marker,
@@ -79,7 +78,6 @@ func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*Flig
 		log.Printf("[InitSearch] Error marshaling body: %v", err)
 		return nil, fmt.Errorf("marshal init request: %w", err)
 	}
-	log.Printf("[InitSearch] Request body: %s", string(bodyBytes))
 
 	// Send POST request
 	httpReq, _ := http.NewRequestWithContext(ctx, "POST", initSearchURL, bytes.NewReader(bodyBytes))
@@ -103,8 +101,6 @@ func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*Flig
 		log.Printf("[InitSearch] Non-200 status: %d\nBody: %s", resp.StatusCode, string(respBody))
 		return nil, fmt.Errorf("flight search init HTTP %d: %s", resp.StatusCode, string(respBody))
 	}
-
-	log.Printf("[InitSearch] Response body: %s", string(respBody))
 
 	var result FlightSearchInitResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
@@ -162,8 +158,6 @@ func (c *Client) GetSearchResults(ctx context.Context, searchID string) (*Flight
 		return nil, fmt.Errorf("search result HTTP %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	log.Printf("[GetSearchResults] Response body: %s", string(respBody))
-
 	var results []FlightSearchResponseWrapper
 	if err := json.Unmarshal(respBody, &results); err != nil {
 		log.Printf("[GetSearchResults] Failed to unmarshal response: %v", err)
@@ -175,9 +169,74 @@ func (c *Client) GetSearchResults(ctx context.Context, searchID string) (*Flight
 		return nil, fmt.Errorf("no results returned")
 	}
 
-	log.Printf("Result Object: %v", results)
+	// Convert prices to USD before returning (using live exchange rates from currency.go)
+	convertPricesToUSD(&results[0])
+
 	// Log the search ID and count of proposals
-	log.Printf("[GetSearchResults] Search ID: %s, Offers: %d", results[0].SearchID, len(results[0].Proposals))
+	log.Printf("[GetSearchResults] Search ID: %s, Offers: %d (prices converted to USD using live exchange rates)", results[0].SearchID, len(results[0].Proposals))
+
+	return &results[0], nil
+}
+
+// GetSearchResultsRaw fetches search results without currency conversion for debugging
+func (c *Client) GetSearchResultsRaw(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error) {
+	url := fmt.Sprintf(resultSearchURL, searchID)
+	log.Printf("[GetSearchResultsRaw] Fetching raw results from URL: %s", url)
+
+	httpReq, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
+	httpReq.Header.Set("Accept-Encoding", "gzip,deflate")
+
+	resp, err := c.HTTP.Do(httpReq)
+	if err != nil {
+		log.Printf("[GetSearchResultsRaw] HTTP request failed: %v", err)
+		return nil, fmt.Errorf("get search result failed: %w", err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Printf("[GetSearchResultsRaw] Failed to close response body: %v", err)
+		}
+	}(resp.Body)
+
+	var reader io.Reader = resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			log.Printf("[GetSearchResultsRaw] Failed to create gzip reader: %v", err)
+			return nil, err
+		}
+		defer func(gzipReader *gzip.Reader) {
+			err := gzipReader.Close()
+			if err != nil {
+				log.Printf("[GetSearchResultsRaw] Failed to close gzip reader: %v", err)
+			}
+		}(gzipReader)
+		reader = gzipReader
+	}
+
+	respBody, err := io.ReadAll(reader)
+	if err != nil {
+		log.Printf("[GetSearchResultsRaw] Failed to read response body: %v", err)
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[GetSearchResultsRaw] Non-200 status: %d\nBody: %s", resp.StatusCode, string(respBody))
+		return nil, fmt.Errorf("search result HTTP %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var results []FlightSearchResponseWrapper
+	if err := json.Unmarshal(respBody, &results); err != nil {
+		log.Printf("[GetSearchResultsRaw] Failed to unmarshal response: %v", err)
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		log.Printf("[GetSearchResultsRaw] Empty result array")
+		return nil, fmt.Errorf("no results returned")
+	}
+
+	// DO NOT convert prices - return raw data
+	log.Printf("[GetSearchResultsRaw] Search ID: %s, Offers: %d (RAW - no currency conversion)", results[0].SearchID, len(results[0].Proposals))
 
 	return &results[0], nil
 }
