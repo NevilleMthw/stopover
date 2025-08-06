@@ -5,268 +5,155 @@ import { useState, useRef, useEffect } from "react"
 import SearchResultsHeader from "../../components/search-results-header"
 import FlightFilters from "../../components/flight-filters"
 import FlightCard from "../../components/flight-card"
-import VendorCard from "../../components/vendor-card"
 import FlightPagination from "../../components/flight-pagination"
 import NoFlightsFound from "../../components/no-flights-found"
 import SelectedFlightSummary from "../../components/selected-flight-summary"
 
-// Enhanced flight data with baggage information
-const flightResults = [
-  {
-    id: 1,
-    airline: "Air Canada",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "08:30",
-    arrivalTime: "11:45",
-    duration: "3h 15m",
-    durationMinutes: 195,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$432",
-    priceValue: 432,
-    stops: "Nonstop",
-    stopCount: 0,
-    amenities: ["wifi", "food", "entertainment"],
-    checkedBag: true,
-    handBaggage: true,
-    rating: 4.5,
-  },
-  {
-    id: 2,
-    airline: "Delta Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "10:15",
-    arrivalTime: "13:50",
-    duration: "3h 35m",
-    durationMinutes: 215,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$389",
-    priceValue: 389,
-    stops: "Nonstop",
-    stopCount: 0,
-    amenities: ["wifi", "food"],
-    checkedBag: true,
-    handBaggage: true,
-    rating: 4.3,
-  },
-  {
-    id: 3,
-    airline: "United Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "13:45",
-    arrivalTime: "18:20",
-    duration: "4h 35m",
-    durationMinutes: 275,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$356",
-    priceValue: 356,
-    stops: "1 stop (ORD)",
-    stopCount: 1,
-    amenities: ["wifi", "entertainment"],
-    checkedBag: false,
-    handBaggage: true,
-    rating: 4.0,
-  },
-  {
-    id: 4,
-    airline: "Alaska Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "16:30",
-    arrivalTime: "19:45",
-    duration: "3h 15m",
-    durationMinutes: 195,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$412",
-    priceValue: 412,
-    stops: "Nonstop",
-    stopCount: 0,
-    amenities: ["wifi", "food", "entertainment"],
-    checkedBag: true,
-    handBaggage: true,
-    rating: 4.7,
-  },
-  {
-    id: 5,
-    airline: "American Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "19:20",
-    arrivalTime: "23:05",
-    duration: "3h 45m",
-    durationMinutes: 225,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$378",
-    priceValue: 378,
-    stops: "Nonstop",
-    stopCount: 0,
-    amenities: ["wifi"],
-    checkedBag: false,
-    handBaggage: true,
-    rating: 4.2,
-  },
-  {
-    id: 6,
-    airline: "JetBlue",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "07:15",
-    arrivalTime: "12:05",
-    duration: "4h 50m",
-    durationMinutes: 290,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$345",
-    priceValue: 345,
-    stops: "1 stop (JFK)",
-    stopCount: 1,
-    amenities: ["wifi", "food", "entertainment"],
-    checkedBag: true,
-    handBaggage: true,
-    rating: 4.4,
-  },
-  {
-    id: 7,
-    airline: "Southwest Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "11:30",
-    arrivalTime: "15:10",
-    duration: "3h 40m",
-    durationMinutes: 220,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$402",
-    priceValue: 402,
-    stops: "Nonstop",
-    stopCount: 0,
-    amenities: ["wifi", "food"],
-    checkedBag: true,
-    handBaggage: true,
-    rating: 4.6,
-  },
-  {
-    id: 8,
-    airline: "Frontier Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "14:45",
-    arrivalTime: "19:30",
-    duration: "4h 45m",
-    durationMinutes: 285,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$299",
-    priceValue: 299,
-    stops: "1 stop (DEN)",
-    stopCount: 1,
-    amenities: [],
-    checkedBag: false,
-    handBaggage: true,
-    rating: 3.8,
-  },
-  {
-    id: 9,
-    airline: "Spirit Airlines",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "17:20",
-    arrivalTime: "22:15",
-    duration: "4h 55m",
-    durationMinutes: 295,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$289",
-    priceValue: 289,
-    stops: "1 stop (ORD)",
-    stopCount: 1,
-    amenities: [],
-    checkedBag: false,
-    handBaggage: false,
-    rating: 3.5,
-  },
-  {
-    id: 10,
-    airline: "WestJet",
-    logo: "/placeholder.svg?height=40&width=40",
-    departureTime: "09:45",
-    arrivalTime: "12:50",
-    duration: "3h 05m",
-    durationMinutes: 185,
-    departureAirport: "YYZ",
-    arrivalAirport: "SEA",
-    price: "$425",
-    priceValue: 425,
-    stops: "Nonstop",
-    amenities: ["wifi", "food", "entertainment"],
-    checkedBag: true,
-    handBaggage: true,
-    rating: 4.5,
-  },
-]
-
-// Sample vendor data
-const vendorOptions = [
-  {
-    id: 1,
-    name: "FlightDirect",
-    logo: "/placeholder.svg?height=40&width=40",
-    price: "$389",
-    baggage: "1 checked bag included",
-    seatSelection: "Included",
-    cancellation: "Free within 24 hours",
-    rating: 4.7,
-    features: ["Earn miles", "Mobile boarding pass", "Price guarantee"],
-  },
-  {
-    id: 2,
-    name: "SkyDeals",
-    logo: "/placeholder.svg?height=40&width=40",
-    price: "$356",
-    baggage: "No checked bags",
-    seatSelection: "For a fee",
-    cancellation: "No refunds",
-    rating: 4.2,
-    features: ["Lowest price", "Fast booking"],
-  },
-  {
-    id: 3,
-    name: "TravelPlus",
-    logo: "/placeholder.svg?height=40&width=40",
-    price: "$412",
-    baggage: "2 checked bags included",
-    seatSelection: "Included",
-    cancellation: "Free within 48 hours",
-    rating: 4.8,
-    features: ["Priority boarding", "Premium customer service", "Flexible dates"],
-  },
-  {
-    id: 4,
-    name: "FlyBudget",
-    logo: "/placeholder.svg?height=40&width=40",
-    price: "$342",
-    baggage: "No checked bags",
-    seatSelection: "Not available",
-    cancellation: "No refunds",
-    rating: 3.9,
-    features: ["Budget option", "No frills"],
-  },
-  {
-    id: 5,
-    name: "AirBooker",
-    logo: "/placeholder.svg?height=40&width=40",
-    price: "$378",
-    baggage: "1 checked bag included",
-    seatSelection: "For a fee",
-    cancellation: "Flexible policy",
-    rating: 4.5,
-    features: ["24/7 customer support", "Secure booking", "Price alerts"],
-  },
-]
-
-// Get unique airlines from flight data
-const airlines = [...new Set(flightResults.map((flight) => flight.airline))]
-
 // Sort options
 type SortOption = "best" | "cheapest" | "fastest"
+
+// Interface for flight data from API
+interface ApiFlightDetail {
+  aircraft: string
+  arrival: string
+  arrival_date: string
+  arrival_time: string
+  departure: string
+  departure_date: string
+  departure_time: string
+  duration: number
+  marketing_carrier: string
+  number: string
+  operating_carrier: string
+}
+
+interface ApiSegment {
+  flight: ApiFlightDetail[]
+}
+
+interface ApiTerms {
+  [key: string]: {
+    currency: string
+    price: number
+    unified_price: number
+  }
+}
+
+interface ApiProposal {
+  terms: ApiTerms
+  segment: ApiSegment[]
+}
+
+// Helper function to create a default flight object when data is missing
+function createDefaultFlightObject(index: number, price: number) {
+  const formattedPrice = Math.round(price)
+
+  return {
+    id: index + 1,
+    airline: "Unknown Airline",
+    logo: "/placeholder.svg?height=40&width=40",
+    departureTime: "00:00",
+    arrivalTime: "00:00",
+    duration: "0h 0m",
+    durationMinutes: 0,
+    departureAirport: "N/A",
+    arrivalAirport: "N/A",
+    price: `$${formattedPrice.toLocaleString('en-US')}`,
+    priceValue: formattedPrice,
+    stops: "N/A",
+    stopCount: 0,
+    amenities: [],
+    checkedBag: false,
+    handBaggage: true,
+    rating: 3.0,
+  }
+}
+
+// Helper function to get airline name from carrier code
+function getAirlineName(carrierCode: string | undefined): string {
+  if (!carrierCode) return "Unknown Airline"
+
+  const airlineMap: {[key: string]: string} = {
+    "IX": "Air India Express",
+    "AI": "Air India",
+    "UK": "Vistara",
+    "6E": "IndiGo",
+    "SG": "SpiceJet",
+    "G8": "GoAir",
+    "I5": "AirAsia India",
+    "QP": "Akasa Air"
+  }
+
+  return airlineMap[carrierCode] || `${carrierCode} Airlines`
+}
+
+// Transform API flight data to frontend format
+const transformApiFlights = (apiFlights: ApiProposal[] | null): any[] => {
+  if (!apiFlights || apiFlights.length === 0) {
+    return []
+  }
+
+  return apiFlights.map((proposal, index) => {
+    try {
+      // Check if segment exists and has at least one element
+      if (!proposal.segment || proposal.segment.length === 0 ||
+          !proposal.segment[0].flight || proposal.segment[0].flight.length === 0) {
+        console.warn(`Proposal at index ${index} has no valid segments or flights`)
+        return createDefaultFlightObject(index, 0)
+      }
+
+      const segment = proposal.segment[0]
+      const flights = segment.flight
+
+      // Calculate total duration of all flights
+      const totalDuration = flights.reduce((total, flight) => total + (flight.duration || 0), 0)
+
+      // Get the first and last flight for origin/destination info
+      const firstFlight = flights[0]
+      const lastFlight = flights[flights.length - 1]
+
+      // Get airline info from the first flight
+      const airline = getAirlineName(firstFlight.marketing_carrier)
+
+      // Calculate number of stops (number of flights - 1)
+      const stopCount = Math.max(0, flights.length - 1)
+
+      // Get price from terms (first term found) - already converted to USD by backend
+      const termKey = Object.keys(proposal.terms)[0]
+      const price = termKey ? proposal.terms[termKey].price : 0
+
+      // Format USD price (round to nearest dollar)
+      const formattedPrice = Math.round(price)
+
+      // Extract hours and minutes from total duration
+      const hours = Math.floor(totalDuration / 60)
+      const minutes = totalDuration % 60
+
+      return {
+        id: index + 1,
+        airline: airline,
+        logo: "/placeholder.svg?height=40&width=40",
+        departureTime: firstFlight.departure_time || "00:00",
+        arrivalTime: lastFlight.arrival_time || "00:00",
+        duration: `${hours}h ${minutes}m`,
+        durationMinutes: totalDuration,
+        departureAirport: firstFlight.departure || "N/A",
+        arrivalAirport: lastFlight.arrival || "N/A",
+        price: `$${formattedPrice.toLocaleString('en-US')}`,
+        priceValue: formattedPrice,
+        stops: stopCount === 0 ? "Nonstop" : `${stopCount} stop${stopCount > 1 ? 's' : ''}`,
+        stopCount: stopCount,
+        amenities: [], // Add empty amenities array
+        checkedBag: formattedPrice > 100, // Updated threshold for USD
+        handBaggage: true,
+        rating: 3.5, // Add default rating
+      }
+    } catch (error) {
+      console.error(`Error transforming proposal at index ${index}:`, error)
+      return createDefaultFlightObject(index, 0)
+    }
+  })
+}
 
 export default function FlightsPage() {
   const [tripType, setTripType] = useState("one-way")
@@ -284,28 +171,95 @@ export default function FlightsPage() {
   const [isMobile, setIsMobile] = useState(false)
   const resultsPerPage = 5
   const [showFilters, setShowFilters] = useState(false)
+  const [flightResults, setFlightResults] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [airlines, setAirlines] = useState<string[]>([])
 
+  // Fetch flight data from API
+  useEffect(() => {
+    const fetchFlightData = async () => {
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api/flights'
+
+        const response = await fetch(backendUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+          credentials: 'same-origin',
+        })
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        // Check if data has the expected structure
+        if (!data || !data.proposals || !Array.isArray(data.proposals)) {
+          throw new Error('API response missing expected data structure')
+        }
+
+        // Transform API data to frontend format
+        const transformedFlights = transformApiFlights(data.proposals)
+
+        if (transformedFlights.length > 0) {
+          setFlightResults(transformedFlights)
+          const uniqueAirlines = [...new Set(transformedFlights.map(flight => flight.airline))]
+          setAirlines(uniqueAirlines)
+        } else {
+          setError('No flights found from API')
+        }
+      } catch (err) {
+        console.error("Error fetching flight data:", err)
+
+        let errorMessage = "Failed to fetch flight data"
+
+        if (err instanceof Error) {
+          if (err.message.includes('missing expected data structure')) {
+            errorMessage = "The API response format was invalid"
+          } else if (err.message.includes('API request failed with status')) {
+            errorMessage = `The API server returned an error: ${err.message}`
+          } else {
+            errorMessage += `: ${err.message}`
+          }
+        }
+
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          errorMessage = "Cannot connect to backend server. Please ensure the backend is running at " +
+                         (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080')
+        }
+
+        setError(errorMessage)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFlightData()
+  }, [])
+
+  // Check if mobile
   useEffect(() => {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 1024
       setIsMobile(mobile)
       if (mobile) {
-        setShowAllAirlines(true) // Always show all airlines on mobile
+        setShowAllAirlines(true)
       }
     }
 
-    // Initial check
     checkIfMobile()
-
-    // Add event listener for window resize
     window.addEventListener("resize", checkIfMobile)
-
-    // Cleanup
     return () => window.removeEventListener("resize", checkIfMobile)
   }, [])
 
   const handleSearch = () => {
-    // This function now acts as an "update search" on the flights page
     setSelectedFlight(null)
     setExpandedSearch(false)
     setFilters({
@@ -326,8 +280,6 @@ export default function FlightsPage() {
 
   const handleSelectFlight = (flightId: number) => {
     setSelectedFlight(flightId)
-
-    // Scroll to top of results when selecting a flight
     if (resultsRef.current) {
       resultsRef.current.scrollIntoView({ behavior: "smooth" })
     }
@@ -360,7 +312,6 @@ export default function FlightsPage() {
 
   // Apply filters to flight results
   const filteredFlights = flightResults.filter((flight) => {
-    // Check if flight passes all active filters
     if (filters.checkedBag && !flight.checkedBag) return false
     if (filters.handBaggage && !flight.handBaggage) return false
     if (filters.airlines.length > 0 && !filters.airlines.includes(flight.airline)) return false
@@ -376,9 +327,9 @@ export default function FlightsPage() {
         return a.durationMinutes - b.durationMinutes
       case "best":
       default:
-        // Best is a combination of price, duration, and rating
-        const aScore = a.priceValue * 0.4 + a.durationMinutes * 0.3 - a.rating * 10 * 0.3
-        const bScore = b.priceValue * 0.4 + b.durationMinutes * 0.3 - b.rating * 10 * 0.3
+        // Simple best value calculation: price + duration weight
+        const aScore = a.priceValue * 0.7 + a.durationMinutes * 0.3
+        const bScore = b.priceValue * 0.7 + b.durationMinutes * 0.3
         return aScore - bScore
     }
   })
@@ -419,53 +370,77 @@ export default function FlightsPage() {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Search results area */}
             <div ref={resultsRef} className="lg:col-span-12 p-6 bg-gray-50">
               {selectedFlight === null ? (
-                // Flight search results view
                 <>
-                  <FlightFilters
-                    showFilters={showFilters}
-                    setShowFilters={setShowFilters}
-                    hasActiveFilters={hasActiveFilters}
-                    clearFilters={clearFilters}
-                    filters={filters}
-                    toggleFilter={toggleFilter}
-                    toggleAirlineFilter={toggleAirlineFilter}
-                    airlines={airlines}
-                    showAllAirlines={showAllAirlines}
-                    setShowAllAirlines={setShowAllAirlines}
-                    isMobile={isMobile}
-                    filteredFlightsCount={filteredFlights.length}
-                  />
-
-                  {paginatedFlights.length > 0 ? (
-                    <div className="space-y-4">
-                      {paginatedFlights.map((flight) => (
-                        <FlightCard key={flight.id} flight={flight} handleSelectFlight={handleSelectFlight} />
-                      ))}
+                  {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="w-12 h-12 border-4 border-lime-500 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="mt-4 text-gray-600">Loading flights and converting to USD...</p>
                     </div>
                   ) : (
-                    <NoFlightsFound clearFilters={clearFilters} />
-                  )}
+                    <>
+                      {error && (
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-sm text-yellow-700">{error}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
-                  <FlightPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+                      {/* Currency indicator */}
+                      {flightResults.length > 0 && (
+                        <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 rounded-lg">
+                          <div className="text-sm text-blue-800">
+                            💰 Prices shown in US Dollars ($)
+                          </div>
+                          <div className="text-sm text-blue-600">
+                            {filteredFlights.length} flights found
+                          </div>
+                        </div>
+                      )}
+                      
+                      <FlightFilters
+                        showFilters={showFilters}
+                        setShowFilters={setShowFilters}
+                        hasActiveFilters={hasActiveFilters}
+                        clearFilters={clearFilters}
+                        filters={filters}
+                        toggleFilter={toggleFilter}
+                        toggleAirlineFilter={toggleAirlineFilter}
+                        airlines={airlines}
+                        showAllAirlines={showAllAirlines}
+                        setShowAllAirlines={setShowAllAirlines}
+                        isMobile={isMobile}
+                        filteredFlightsCount={filteredFlights.length}
+                      />
+
+                      {paginatedFlights.length > 0 ? (
+                        <div className="space-y-4">
+                          {paginatedFlights.map((flight) => (
+                            <FlightCard key={flight.id} flight={flight} handleSelectFlight={handleSelectFlight} />
+                          ))}
+                        </div>
+                      ) : (
+                        <NoFlightsFound clearFilters={clearFilters} />
+                      )}
+
+                      <FlightPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+                    </>
+                  )}
                 </>
               ) : (
-                // Vendor comparison view for selected flight
-                <>
-                  <SelectedFlightSummary
-                    selectedFlightData={selectedFlightData}
-                    handleBackToResults={handleBackToResults}
-                  />
-
-                  {/* Vendor options */}
-                  <div className="space-y-4">
-                    {vendorOptions.map((vendor) => (
-                      <VendorCard key={vendor.id} vendor={vendor} />
-                    ))}
-                  </div>
-                </>
+                <SelectedFlightSummary
+                  selectedFlightData={selectedFlightData}
+                  handleBackToResults={handleBackToResults}
+                />
               )}
             </div>
           </div>
