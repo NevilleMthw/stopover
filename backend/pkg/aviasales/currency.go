@@ -1,4 +1,4 @@
-package main
+package aviasales
 
 import (
 	"encoding/json"
@@ -105,7 +105,7 @@ func getCurrentRubToUSDRate() float64 {
 //    }
 
 // Convert all prices in flight response to USD
-func convertPricesToUSD(response *FlightSearchResponseWrapper) {
+func (c *Client) ConvertPricesToUSD(response *FlightSearchResponseWrapper) {
 	if response == nil {
 		log.Printf("Warning: Received nil response for currency conversion")
 		return
