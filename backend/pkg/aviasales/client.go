@@ -1,4 +1,4 @@
-package main
+package aviasales
 
 import (
 	"bytes"
@@ -9,28 +9,39 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"stopover-go/config"
 	"time"
 )
 
-const (
-	initSearchURL   = "https://api.travelpayouts.com/v1/flight_search"
-	resultSearchURL = "https://api.travelpayouts.com/v1/flight_search_results?uuid=%s"
-)
+// const (
+// 	initSearchURL   = "https://api.travelpayouts.com/v1/flight_search"
+// 	resultSearchURL = "https://api.travelpayouts.com/v1/flight_search_results?uuid=%s"
+// )
 
 type Client struct {
 	Token  string
 	Marker string
 	Host   string
 	HTTP   *http.Client
+	Config *config.Config
 }
 
-func NewClient(token, marker, host string) *Client {
+func NewFlightIntegrationClient(token, marker, host string, config *config.Config) FlightIntegrationAPI {
 	return &Client{
 		Token:  token,
 		Marker: marker,
 		Host:   host,
 		HTTP:   &http.Client{Timeout: 15 * time.Second},
+		Config: config,
 	}
+}
+
+type FlightIntegrationAPI interface {
+	InitSearch(ctx context.Context, req FlightSearchRequest) (*FlightSearchInitResponse, error)
+	GetSearchResultsWithPolling(ctx context.Context, searchID string, maxAttempts int, pollInterval time.Duration) (*FlightSearchResponseWrapper, error)
+	GetSearchResultsRaw(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error)
+	GetSearchResults(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error)
+	ConvertPricesToUSD(response *FlightSearchResponseWrapper)
 }
 
 func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*FlightSearchInitResponse, error) {
@@ -80,7 +91,7 @@ func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*Flig
 	}
 
 	// Send POST request
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", initSearchURL, bytes.NewReader(bodyBytes))
+	httpReq, _ := http.NewRequestWithContext(ctx, "POST", c.Config.AviaSalesConfig.InitSearchURL, bytes.NewReader(bodyBytes))
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.HTTP.Do(httpReq)
@@ -114,7 +125,7 @@ func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*Flig
 
 // GetSearchResults fetches search results for a given search ID with a single request
 func (c *Client) GetSearchResults(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error) {
-	url := fmt.Sprintf(resultSearchURL, searchID)
+	url := fmt.Sprintf(c.Config.AviaSalesConfig.ResultSearchURL, searchID)
 	log.Printf("[GetSearchResults] Fetching results from URL: %s", url)
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -170,7 +181,7 @@ func (c *Client) GetSearchResults(ctx context.Context, searchID string) (*Flight
 	}
 
 	// Convert prices to USD before returning (using live exchange rates from currency.go)
-	convertPricesToUSD(&results[0])
+	c.ConvertPricesToUSD(&results[0])
 
 	// Log the search ID and count of proposals
 	log.Printf("[GetSearchResults] Search ID: %s, Offers: %d (prices converted to USD using live exchange rates)", results[0].SearchID, len(results[0].Proposals))
@@ -180,7 +191,7 @@ func (c *Client) GetSearchResults(ctx context.Context, searchID string) (*Flight
 
 // GetSearchResultsRaw fetches search results without currency conversion for debugging
 func (c *Client) GetSearchResultsRaw(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error) {
-	url := fmt.Sprintf(resultSearchURL, searchID)
+	url := fmt.Sprintf(c.Config.AviaSalesConfig.ResultSearchURL, searchID)
 	log.Printf("[GetSearchResultsRaw] Fetching raw results from URL: %s", url)
 
 	httpReq, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
