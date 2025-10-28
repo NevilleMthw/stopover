@@ -1,8 +1,8 @@
 package main
 
 import (
-	"stopover-go/config"
-	"stopover-go/internal/api"
+	"stopover.backend/config"
+	"stopover.backend/internal/api"
 )
 
 func main() {

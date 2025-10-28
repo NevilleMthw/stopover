@@ -8,8 +8,22 @@ export default function FlightBooking() {
   const [tripType, setTripType] = useState("one-way")
   const router = useRouter()
 
-  const handleSearch = () => {
-    router.push("/flights")
+  const handleSearch = (params: {
+    origin: string
+    destination: string
+    passengers: number
+    departure: string
+    returnDate?: string
+    tripType: string
+  }) => {
+    const q = new URLSearchParams()
+    q.set('origin', params.origin)
+    q.set('destination', params.destination)
+    q.set('departure', params.departure)
+    q.set('adults', String(params.passengers))
+    q.set('tripType', params.tripType)
+    if (params.returnDate) q.set('return', params.returnDate)
+    router.push(`/flights?${q.toString()}`)
   }
 
   return (

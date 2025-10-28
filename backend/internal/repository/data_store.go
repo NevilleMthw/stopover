@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"stopover-go/config"
 	"time"
+
+	"stopover.backend/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

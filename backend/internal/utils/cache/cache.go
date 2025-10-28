@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"log"
-	"stopover-go/config"
+	"stopover.backend/config"
 
 	"github.com/redis/go-redis/v9"
 )

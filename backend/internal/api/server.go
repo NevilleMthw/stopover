@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"stopover-go/config"
-	"stopover-go/internal/api/handler"
-	"stopover-go/internal/api/route"
-	"stopover-go/internal/repository"
-	"stopover-go/pkg/aviasales"
+	"stopover.backend/config"
+	"stopover.backend/internal/api/handler"
+	"stopover.backend/internal/api/route"
+	"stopover.backend/internal/repository"
+	"stopover.backend/pkg/aviasales"
 
 	// _ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,49 +27,20 @@ func StartServer() {
 	rootCtx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 
-	// // init redis db
-	// rdb, err := cache.NewRedisClient(rootCtx, cfg)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-
-	// cSvc := cache.NewCacheService(rdb, cfg)
-
 	// init postgres db
 	dbConn, err := repository.NewPostgres(context.Background(), cfg)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	// run db migrations
-	// err = runDbMigrations(cfg)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-
-	// hndlr := handler.NewUserHandler(
-	// 	services.NewService(
-	// 		repository.NewRepository(
-	// 			dbConn), jwtutil.NewTokenService(cfg)))
-
-	//tokensvc := jwtutil.NewTokenService(cfg)
-
-	// cache
-	// err = uploadRoleAccessMappingToCache(rootCtx, repository.NewUserRepository(dbConn), cSvc)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-
-	// // set up middleware
-	// mw := middleware.NewAuthRepo(repository.NewUserRepository(dbConn), cSvc)
-	f_client := aviasales.NewFlightIntegrationClient(cfg.AviaSalesConfig.AviaSalesToken,
+	fClient := aviasales.NewFlightIntegrationClient(cfg.AviaSalesConfig.AviaSalesToken,
 		cfg.AviaSalesConfig.AviaSalesMarker,
 		cfg.AviaSalesConfig.AviaSalesHost, &cfg)
 
-	f_hnldr := handler.NewFlightHandler(f_client, &cfg)
+	fHnldr := handler.NewFlightHandler(fClient, &cfg)
 
 	// Set up routes
-	router := route.SetupRouter(f_hnldr, &cfg)
+	router := route.SetupRouter(fHnldr, &cfg)
 	srv := &http.Server{
 		Addr:    ":8084",
 		Handler: router.Handler(),
@@ -117,52 +88,3 @@ func startHttpServer(srv *http.Server) {
 		}
 	}()
 }
-
-// func uploadRoleAccessMappingToCache(ctx context.Context, userRepo repository.UserRepository, cSvc cache.CacheService) error {
-
-// 	rAMapping, err := userRepo.GetRoleAccessMapping(ctx)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for _, v := range rAMapping.RoleAccess {
-// 		err = cSvc.SetValues(ctx, strconv.Itoa(int(v.RoleId)), v.Access)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-
-// }
-
-// func runDbMigrations(cfg config.Config) error {
-// 	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
-// 	dbDriver, err := sql.Open("pgx", dbURL)
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-// 	}
-// 	defer dbDriver.Close()
-// 	db, err := pgx.WithInstance(dbDriver, &pgx.Config{})
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	m, err := migrate.NewWithDatabaseInstance("file://db/migrations", cfg.DBName, db)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = m.Up()
-// 	if err != nil {
-// 		if err == migrate.ErrNoChange {
-// 			log.Println("No new migrations to apply.")
-// 			return nil
-// 		} else {
-// 			log.Printf("Error applying migrations: %v", err)
-// 		}
-// 		return err
-// 	}
-// 	log.Println("Migrations applied successfully.")
-// 	return nil
-// }

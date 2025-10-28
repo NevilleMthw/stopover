@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"stopover-go/internal/models"
-	"stopover-go/pkg/common"
+	"stopover.backend/internal/models"
+	"stopover.backend/pkg/common"
 )
 
 func (s *Service) CreateUser(ctx context.Context, req models.CreateUserRequest) (*models.CreateUserResponse, error) {

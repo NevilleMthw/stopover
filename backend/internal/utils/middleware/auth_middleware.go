@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"net/http"
-	"stopover-go/internal/models"
-	"stopover-go/internal/repository"
-	"stopover-go/pkg/common"
-	"stopover-go/pkg/jwtutil"
+	"stopover.backend/internal/models"
+	"stopover.backend/internal/repository"
+	"stopover.backend/pkg/common"
+	"stopover.backend/pkg/jwtutil"
 	"strings"
 
 	"github.com/gin-gonic/gin"

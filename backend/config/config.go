@@ -29,14 +29,13 @@ type AviaSalesConfig struct {
 	AviaSalesToken  string `mapstructure:"AVIASALES_TOKEN"`
 	AviaSalesMarker string `mapstructure:"AVIASALES_MARKER"`
 	AviaSalesHost   string `mapstructure:"AVIASALES_HOST"`
-	ExchangeApiUrl  string `mapstructure:"EXCHANGE_API_URL"`
 }
 
 var AppConfig Config
 
 func LoadConfig() {
 
-	viper.SetConfigFile("./.env")
+	viper.SetConfigFile("/home/nevillemthw/Desktop/stopover/backend/.env")
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()

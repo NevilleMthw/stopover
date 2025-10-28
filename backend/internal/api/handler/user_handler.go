@@ -3,10 +3,11 @@ package handler
 import (
 	"log"
 	"net/http"
-	"stopover-go/internal/models"
-	"stopover-go/internal/services"
-	"stopover-go/pkg/common"
 	"strconv"
+
+	"stopover.backend/internal/models"
+	"stopover.backend/internal/services"
+	"stopover.backend/pkg/common"
 
 	"github.com/gin-gonic/gin"
 )

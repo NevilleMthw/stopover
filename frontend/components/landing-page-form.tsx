@@ -1,17 +1,42 @@
 "use client"
 
-import { Calendar, ChevronDown, Plane } from "lucide-react"
+import { Calendar as CalendarIcon, ChevronDown, Plane } from "lucide-react"
 import { Checkbox } from "./ui/checkbox"
 import Link from "next/link"
 import type { Dispatch, SetStateAction } from "react"
+import AirportSelect, { type AirportOption } from "./airport-select"
+import { useState } from "react"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Calendar } from "./ui/calendar"
 
 interface LandingPageFormProps {
   tripType: string
   setTripType: Dispatch<SetStateAction<string>>
-  handleSearch: () => void
+  handleSearch: (params: {
+    origin: string
+    destination: string
+    passengers: number
+    departure: string
+    returnDate?: string
+    tripType: string
+  }) => void
 }
 
 export default function LandingPageForm({ tripType, setTripType, handleSearch }: LandingPageFormProps) {
+  const [from, setFrom] = useState<AirportOption | null>(null)
+  const [to, setTo] = useState<AirportOption | null>(null)
+  const [passengers, setPassengers] = useState<number>(1)
+  const [departureDate, setDepartureDate] = useState<Date | undefined>(undefined)
+  const [returnDate, setReturnDate] = useState<Date | undefined>(undefined)
+
+  const canSearch = Boolean(
+    from &&
+    to &&
+    passengers > 0 &&
+    departureDate &&
+    (tripType !== "round-trip" || returnDate)
+  )
+
   return (
     <div className="relative z-10 h-screen flex flex-col">
       {/* Header */}
@@ -53,44 +78,93 @@ export default function LandingPageForm({ tripType, setTripType, handleSearch }:
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               {/* From section */}
               <div className="lg:col-span-1">
-                <div className="text-xs text-gray-500 mb-1">FROM</div>
-                <div className="text-xl font-bold mb-1">Toronto (YYZ)</div>
-                <div className="text-sm text-gray-500">Toronto Pearson International Airport</div>
+                <AirportSelect label="From" value={from} onChange={setFrom} placeholder="City or airport" />
               </div>
 
               {/* To section */}
               <div className="bg-lime-100 p-3 rounded-xl lg:col-span-1">
-                <div className="text-xs text-gray-500 mb-1">TO</div>
-                <div className="text-xl font-bold mb-1">Seattle (SEA)</div>
-                <div className="text-sm text-gray-500">Seattle-Tacoma International Airport</div>
+                <AirportSelect label="To" value={to} onChange={setTo} placeholder="City or airport" />
               </div>
 
               {/* Travel dates */}
               <div className="lg:col-span-1">
-                <div className="text-xs text-gray-500 mb-2">TRAVEL DATES</div>
-                <div className="flex items-center border border-gray-200 rounded-lg p-2">
-                  <Calendar size={16} className="text-gray-400 mr-2" />
-                  <span className="text-sm">Tue, December 20, 2023</span>
-                </div>
+                <div className="text-xs text-gray-500 mb-2">DEPARTURE</div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-start border border-gray-200 rounded-lg p-2 text-left"
+                    >
+                      <CalendarIcon size={16} className="text-gray-400 mr-2" />
+                      <span className="text-sm">
+                        {departureDate ? departureDate.toLocaleDateString() : "Select date"}
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={departureDate}
+                      onSelect={(date) => setDepartureDate(date)}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0,0,0,0)
+                        return date < today
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="lg:col-span-1">
                 <div className="text-xs text-gray-500 mb-2">RETURN</div>
-                <div className="flex items-center border border-gray-200 rounded-lg p-2">
-                  <Calendar size={16} className="text-gray-400 mr-2" />
-                  <span className="text-sm">Sun, March 26, 2024</span>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={tripType !== "round-trip"}
+                      className={`w-full flex items-center justify-start border border-gray-200 rounded-lg p-2 text-left ${tripType !== "round-trip" ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <CalendarIcon size={16} className="text-gray-400 mr-2" />
+                      <span className="text-sm">
+                        {returnDate ? returnDate.toLocaleDateString() : tripType === "round-trip" ? "Select date" : "N/A for one-way"}
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  {tripType === "round-trip" && (
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={returnDate}
+                        onSelect={(date) => setReturnDate(date)}
+                        disabled={(date) => {
+                          const minDate = departureDate ? new Date(departureDate) : new Date()
+                          minDate.setHours(0,0,0,0)
+                          return date < minDate
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  )}
+                </Popover>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               {/* Passengers */}
               <div className="lg:col-span-2">
-                <div className="text-xs text-gray-500 mb-2">PASSENGERS & CLASS</div>
+                <div className="text-xs text-gray-500 mb-2">PASSENGERS</div>
                 <div className="flex justify-between items-center border border-gray-200 rounded-lg p-2">
-                  <div>
-                    <div className="text-sm">2 Adults, 1 Children</div>
-                    <div className="text-xs text-gray-500">Business Class</div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={passengers}
+                      onChange={(e) => setPassengers(Math.max(1, Number(e.target.value || 1)))}
+                      className="w-20 border border-gray-200 rounded px-2 py-1 text-sm"
+                    />
+                    <span className="text-sm">traveler(s)</span>
                   </div>
                   <ChevronDown size={16} className="text-gray-400" />
                 </div>
@@ -100,13 +174,33 @@ export default function LandingPageForm({ tripType, setTripType, handleSearch }:
               <div className="flex items-center lg:col-span-1">
                 <Checkbox id="flexible" className="mr-2" />
                 <label htmlFor="flexible" className="text-sm">
-                  My date are flexible (+/- days)
+                  My dates are flexible (+/- days)
                 </label>
               </div>
 
               {/* Search button */}
               <div className="lg:col-span-1">
-                <button className="w-full bg-black text-white py-3 rounded-full font-medium" onClick={handleSearch}>
+                <button
+                  className="w-full bg-black text-white py-3 rounded-full font-medium disabled:opacity-50"
+                  onClick={() => {
+                    if (!from || !to || !departureDate) return
+                    const fmt = (d: Date) => {
+                      const y = d.getFullYear()
+                      const m = String(d.getMonth() + 1).padStart(2, '0')
+                      const day = String(d.getDate()).padStart(2, '0')
+                      return `${y}-${m}-${day}`
+                    }
+                    handleSearch({
+                      origin: from.code,
+                      destination: to.code,
+                      passengers,
+                      departure: fmt(departureDate),
+                      returnDate: tripType === 'round-trip' && returnDate ? fmt(returnDate) : undefined,
+                      tripType,
+                    })
+                  }}
+                  disabled={!canSearch}
+                >
                   Search Flight
                 </button>
               </div>

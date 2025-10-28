@@ -1,8 +1,8 @@
 package route
 
 import (
-	"stopover-go/config"
-	"stopover-go/internal/api/handler"
+	"stopover.backend/config"
+	"stopover.backend/internal/api/handler"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,18 +11,26 @@ import (
 func SetupRouter(fhandler *handler.FlightHandler, cfg *config.Config) *gin.Engine {
 	router := gin.Default()
 
-	// endpoints
-	// rg := router.Group("/api")
-	//rg.Use(authMiddleware)
+	// Minimal CORS for frontend dev
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
 
-	// rg.POST("/users/all", handler.GetAllUsers)
-	// rg.DELETE("/users/:id", handler.DeleteUser)
+	// API group
+	api := router.Group("/api")
+	{
+		api.GET("/airports/autocomplete", fhandler.AirportsAutocomplete)
+		api.GET("/flights", fhandler.SearchFlightsAPI)
+	}
 
-	// // public endpoints
-	// pub := router.Group("/account")
-	// pub.POST("/users", handler.CreateUser)
-	// pub.POST("/login", handler.Login)
-
+	// legacy flight group (kept as-is)
 	flt := router.Group("/flight")
 	flt.POST("/search", fhandler.SearchFlight)
 	return router
