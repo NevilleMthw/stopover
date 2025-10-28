@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"stopover-go/internal/models"
-	"stopover-go/internal/repository"
-	"stopover-go/pkg/jwtutil"
+	"stopover.backend/internal/models"
+	"stopover.backend/internal/repository"
+	"stopover.backend/pkg/jwtutil"
 )
 
 type Service struct {

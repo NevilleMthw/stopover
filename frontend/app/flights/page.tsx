@@ -87,66 +87,71 @@ function getAirlineName(carrierCode: string | undefined): string {
   return airlineMap[carrierCode] || `${carrierCode} Airlines`
 }
 
-// Transform API flight data to frontend format
-const transformApiFlights = (apiFlights: ApiProposal[] | null): any[] => {
-  if (!apiFlights || apiFlights.length === 0) {
-    return []
+// Add a small helper at top-level
+function formatCurrency(value: number, currency: string) {
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Math.round(value))
+  } catch {
+    // Fallback if currency code is unrecognized
+    return `${currency} ${Math.round(value).toLocaleString('en-US')}`
   }
+}
+
+// Inside transformApiFlights
+const transformApiFlights = (apiFlights: ApiProposal[] | null): any[] => {
+  if (!apiFlights || apiFlights.length === 0) return []
 
   return apiFlights.map((proposal, index) => {
     try {
-      // Check if segment exists and has at least one element
       if (!proposal.segment || proposal.segment.length === 0 ||
           !proposal.segment[0].flight || proposal.segment[0].flight.length === 0) {
-        console.warn(`Proposal at index ${index} has no valid segments or flights`)
         return createDefaultFlightObject(index, 0)
       }
 
       const segment = proposal.segment[0]
       const flights = segment.flight
-
-      // Calculate total duration of all flights
-      const totalDuration = flights.reduce((total, flight) => total + (flight.duration || 0), 0)
-
-      // Get the first and last flight for origin/destination info
+      const totalDuration = flights.reduce((total, f) => total + (f.duration || 0), 0)
       const firstFlight = flights[0]
       const lastFlight = flights[flights.length - 1]
-
-      // Get airline info from the first flight
       const airline = getAirlineName(firstFlight.marketing_carrier)
-
-      // Calculate number of stops (number of flights - 1)
       const stopCount = Math.max(0, flights.length - 1)
 
-      // Get price from terms (first term found) - already converted to USD by backend
       const termKey = Object.keys(proposal.terms)[0]
-      const price = termKey ? proposal.terms[termKey].price : 0
+      const term = termKey ? proposal.terms[termKey] : undefined
 
-      // Format USD price (round to nearest dollar)
-      const formattedPrice = Math.round(price)
+      const originalPrice = term?.price ?? 0
+      const currency = term?.currency ?? 'USD' // default safe fallback
 
-      // Extract hours and minutes from total duration
-      const hours = Math.floor(totalDuration / 60)
-      const minutes = totalDuration % 60
+      // Prefer `unified_price` for sorting across mixed currencies (if provided by API)
+      const sortValue = term?.unified_price ?? originalPrice
 
       return {
         id: index + 1,
-        airline: airline,
+        airline,
         logo: "/placeholder.svg?height=40&width=40",
         departureTime: firstFlight.departure_time || "00:00",
         arrivalTime: lastFlight.arrival_time || "00:00",
-        duration: `${hours}h ${minutes}m`,
+        duration: `${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m`,
         durationMinutes: totalDuration,
         departureAirport: firstFlight.departure || "N/A",
         arrivalAirport: lastFlight.arrival || "N/A",
-        price: `$${formattedPrice.toLocaleString('en-US')}`,
-        priceValue: formattedPrice,
+
+        // Display the original currency
+        price: formatCurrency(originalPrice, currency),
+
+        // Keep a numeric value for sorting/pagination (normalized when possible)
+        priceValue: Math.round(sortValue),
+
+        // Also keep these if you want to use/show them elsewhere
+        originalPriceValue: Math.round(originalPrice),
+        currency,
+
         stops: stopCount === 0 ? "Nonstop" : `${stopCount} stop${stopCount > 1 ? 's' : ''}`,
-        stopCount: stopCount,
-        amenities: [], // Add empty amenities array
-        checkedBag: formattedPrice > 100, // Updated threshold for USD
+        stopCount,
+        amenities: [],
+        checkedBag: sortValue > 100, // heuristic, unchanged
         handBaggage: true,
-        rating: 3.5, // Add default rating
+        rating: 3.5,
       }
     } catch (error) {
       console.error(`Error transforming proposal at index ${index}:`, error)
@@ -183,15 +188,44 @@ export default function FlightsPage() {
       setError(null)
 
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api/flights'
+        // Build API base similar to AirportSelect normalization
+        const raw = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8084'
+        let apiBase = ''
+        try {
+          const u = new URL(raw)
+          apiBase = `${u.origin}/api`
+        } catch {
+          const origin = raw.replace(/\/$/, '')
+          apiBase = /\/api(\/|$)/.test(origin) ? origin.replace(/\/api(?:\/.*)?$/, '/api') : `${origin}/api`
+        }
 
-        const response = await fetch(backendUrl, {
+        // Read query params from the current URL
+        const params = new URLSearchParams(window.location.search)
+        const originCode = params.get('origin')
+        const destinationCode = params.get('destination')
+        const departure = params.get('departure')
+        const ret = params.get('return')
+        const adults = params.get('adults') || '1'
+        const tripType = params.get('tripType') || 'one-way'
+
+        if (!originCode || !destinationCode || !departure) {
+          throw new Error('Missing required search parameters in URL')
+        }
+
+        const qs = new URLSearchParams()
+        qs.set('origin', originCode)
+        qs.set('destination', destinationCode)
+        qs.set('departure', departure)
+        qs.set('adults', adults)
+        qs.set('tripType', tripType)
+        if (ret) qs.set('return', ret)
+
+        const response = await fetch(`${apiBase}/flights?${qs.toString()}`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
           },
           mode: 'cors',
-          credentials: 'same-origin',
         })
 
         if (!response.ok) {
@@ -232,7 +266,7 @@ export default function FlightsPage() {
 
         if (err instanceof TypeError && err.message.includes('fetch')) {
           errorMessage = "Cannot connect to backend server. Please ensure the backend is running at " +
-                         (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080')
+                         (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8084')
         }
 
         setError(errorMessage)
@@ -376,7 +410,7 @@ export default function FlightsPage() {
                   {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <div className="w-12 h-12 border-4 border-lime-500 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="mt-4 text-gray-600">Loading flights and converting to USD...</p>
+                      <p className="mt-4 text-gray-600">Loading flights...</p>
                     </div>
                   ) : (
                     <>
@@ -399,7 +433,7 @@ export default function FlightsPage() {
                       {flightResults.length > 0 && (
                         <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 rounded-lg">
                           <div className="text-sm text-blue-800">
-                            💰 Prices shown in US Dollars ($)
+                             Prices shown in original currencies
                           </div>
                           <div className="text-sm text-blue-600">
                             {filteredFlights.length} flights found

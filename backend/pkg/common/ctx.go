@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"stopover-go/internal/models"
+	"stopover.backend/internal/models"
 
 	"github.com/gin-gonic/gin"
 )

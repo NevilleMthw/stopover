@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"stopover-go/internal/models"
-	"stopover-go/pkg/common"
+	"stopover.backend/internal/models"
+	"stopover.backend/pkg/common"
 
 	"strings"
 	"sync"

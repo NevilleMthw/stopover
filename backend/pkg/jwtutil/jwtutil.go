@@ -3,8 +3,8 @@ package jwtutil
 import (
 	"fmt"
 	"log/slog"
-	"stopover-go/config"
-	"stopover-go/internal/models"
+	"stopover.backend/config"
+	"stopover.backend/internal/models"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

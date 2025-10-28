@@ -9,14 +9,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"stopover-go/config"
 	"time"
-)
 
-// const (
-// 	initSearchURL   = "https://api.travelpayouts.com/v1/flight_search"
-// 	resultSearchURL = "https://api.travelpayouts.com/v1/flight_search_results?uuid=%s"
-// )
+	"stopover.backend/config"
+)
 
 type Client struct {
 	Token  string
@@ -41,11 +37,18 @@ type FlightIntegrationAPI interface {
 	GetSearchResultsWithPolling(ctx context.Context, searchID string, maxAttempts int, pollInterval time.Duration) (*FlightSearchResponseWrapper, error)
 	GetSearchResultsRaw(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error)
 	GetSearchResults(ctx context.Context, searchID string) (*FlightSearchResponseWrapper, error)
-	ConvertPricesToUSD(response *FlightSearchResponseWrapper)
 }
 
 func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*FlightSearchInitResponse, error) {
 	log.Println("[InitSearch] Preparing request")
+
+	// Set Host and Marker BEFORE signature generation
+	if req.Host == "" {
+		req.Host = c.Host
+	}
+	if req.Marker == "" {
+		req.Marker = c.Marker
+	}
 
 	// Prepare map for signature
 	signParams := map[string]string{
@@ -79,9 +82,6 @@ func (c *Client) InitSearch(ctx context.Context, req FlightSearchRequest) (*Flig
 		req.Segments,
 	)
 	log.Printf("[InitSearch] Generated signature: %s", req.Signature)
-
-	req.Marker = c.Marker
-	req.Host = c.Host
 
 	// Marshal body
 	bodyBytes, err := json.Marshal(req)
@@ -180,11 +180,8 @@ func (c *Client) GetSearchResults(ctx context.Context, searchID string) (*Flight
 		return nil, fmt.Errorf("no results returned")
 	}
 
-	// Convert prices to USD before returning (using live exchange rates from currency.go)
-	c.ConvertPricesToUSD(&results[0])
-
-	// Log the search ID and count of proposals
-	log.Printf("[GetSearchResults] Search ID: %s, Offers: %d (prices converted to USD using live exchange rates)", results[0].SearchID, len(results[0].Proposals))
+	// Return results as-is, no conversion
+	log.Printf("[GetSearchResults] Search ID: %s, Offers: %d (prices in original currencies)", results[0].SearchID, len(results[0].Proposals))
 
 	return &results[0], nil
 }
