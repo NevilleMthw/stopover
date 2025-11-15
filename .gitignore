@@ -35,6 +35,6 @@ frontend/pnpm-lock.yaml
 
 .idea/
 
-backend/go.mod
 backend/go.sum
 backend/aviasales.log
+.aiignore
