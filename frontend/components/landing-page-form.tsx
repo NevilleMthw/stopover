@@ -88,20 +88,20 @@ export default function LandingPageForm({ tripType, setTripType, handleSearch }:
 
               {/* Travel dates */}
               <div className="lg:col-span-1">
-                <div className="text-xs text-gray-500 mb-2">DEPARTURE</div>
+                <div className="text-xs font-medium text-gray-500 mb-2">DEPARTURE</div>
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="w-full flex items-center justify-start border border-gray-200 rounded-lg p-2 text-left"
+                      className="w-full flex items-center justify-start border border-gray-200 rounded-lg py-2.5 px-3 text-left hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                     >
-                      <CalendarIcon size={16} className="text-gray-400 mr-2" />
-                      <span className="text-sm">
-                        {departureDate ? departureDate.toLocaleDateString() : "Select date"}
+                      <CalendarIcon size={16} className="text-gray-400 mr-2 flex-shrink-0" />
+                      <span className="text-sm text-gray-900">
+                        {departureDate ? departureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Select date"}
                       </span>
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent align="start">
                     <Calendar
                       mode="single"
                       selected={departureDate}
@@ -118,22 +118,22 @@ export default function LandingPageForm({ tripType, setTripType, handleSearch }:
               </div>
 
               <div className="lg:col-span-1">
-                <div className="text-xs text-gray-500 mb-2">RETURN</div>
+                <div className="text-xs font-medium text-gray-500 mb-2">RETURN</div>
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
                       type="button"
                       disabled={tripType !== "round-trip"}
-                      className={`w-full flex items-center justify-start border border-gray-200 rounded-lg p-2 text-left ${tripType !== "round-trip" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`w-full flex items-center justify-start border border-gray-200 rounded-lg py-2.5 px-3 text-left transition-all ${tripType !== "round-trip" ? "opacity-50 cursor-not-allowed bg-gray-50" : "hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"}`}
                     >
-                      <CalendarIcon size={16} className="text-gray-400 mr-2" />
-                      <span className="text-sm">
-                        {returnDate ? returnDate.toLocaleDateString() : tripType === "round-trip" ? "Select date" : "N/A for one-way"}
+                      <CalendarIcon size={16} className="text-gray-400 mr-2 flex-shrink-0" />
+                      <span className="text-sm text-gray-900">
+                        {returnDate ? returnDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : tripType === "round-trip" ? "Select date" : "N/A"}
                       </span>
                     </button>
                   </PopoverTrigger>
                   {tripType === "round-trip" && (
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent align="start">
                       <Calendar
                         mode="single"
                         selected={returnDate}

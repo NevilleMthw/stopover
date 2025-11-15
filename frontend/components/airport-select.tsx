@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useRef, useState } from "react"
+import { Plane, Search } from "lucide-react"
 
 export type AirportOption = {
   code: string
@@ -94,42 +95,60 @@ export default function AirportSelect({ label, value, onChange, placeholder }: A
 
   return (
     <div className="w-full">
-      <div className="text-xs text-gray-500 mb-1">{label.toUpperCase()}</div>
+      <div className="text-xs font-medium text-gray-500 mb-2">{label.toUpperCase()}</div>
       <div className="relative">
-        <input
-          className="w-full border border-gray-200 rounded-lg p-2 text-sm"
-          placeholder={placeholder || "Search airport or city"}
-          value={value ? `${value.city ? value.city + " - " : ""}${value.name} (${value.code})` : query}
-          onChange={(e) => {
-            onChange(null)
-            setQuery(e.target.value)
-            setOpen(true)
-          }}
-          onFocus={() => setOpen(true)}
-        />
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            {value ? <Plane className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+          </div>
+          <input
+            className="w-full border border-gray-200 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+            placeholder={placeholder || "Search airport or city"}
+            value={value ? `${value.city ? value.city + " - " : ""}${value.name} (${value.code})` : query}
+            onChange={(e) => {
+              onChange(null)
+              setQuery(e.target.value)
+              setOpen(true)
+            }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 200)}
+          />
+        </div>
         {open && (options.length > 0 || loading) && (
-          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-64 overflow-auto">
-            {loading && <div className="p-3 text-sm text-gray-500">Loading…</div>}
+          <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-auto">
+            {loading && (
+              <div className="p-4 text-sm text-gray-500 flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-black"></div>
+                Searching airports...
+              </div>
+            )}
             {!loading && options.length === 0 && (
-              <div className="p-3 text-sm text-gray-500">No results</div>
+              <div className="p-4 text-sm text-gray-500">No airports found</div>
             )}
             {!loading &&
               options.map((opt) => (
                 <button
                   key={opt.code + opt.name}
                   type="button"
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 first:rounded-t-xl last:rounded-b-xl"
                   onClick={() => {
                     onChange(opt)
                     setQuery("")
                     setOpen(false)
                   }}
                 >
-                  <div className="text-sm font-medium">
-                    {opt.city ? `${opt.city} — ` : ""}
-                    {opt.name} ({opt.code})
+                  <div className="flex items-center gap-2">
+                    <Plane className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {opt.city ? `${opt.city} — ` : ""}
+                        {opt.name}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {opt.code} {opt.country && `• ${opt.country}`}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">{opt.country}</div>
                 </button>
               ))}
           </div>
