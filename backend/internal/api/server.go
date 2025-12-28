@@ -6,18 +6,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"stopover.backend/config"
 	"stopover.backend/internal/api/handler"
 	"stopover.backend/internal/api/route"
-	"stopover.backend/internal/repository"
 	"stopover.backend/pkg/aviasales"
-
-	// _ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func StartServer() {
@@ -27,12 +23,6 @@ func StartServer() {
 	rootCtx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 
-	// init postgres db
-	dbConn, err := repository.NewPostgres(context.Background(), cfg)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	fClient := aviasales.NewFlightIntegrationClient(cfg.AviaSalesConfig.AviaSalesToken,
 		cfg.AviaSalesConfig.AviaSalesMarker,
 		cfg.AviaSalesConfig.AviaSalesHost, &cfg)
@@ -41,18 +31,27 @@ func StartServer() {
 
 	// Set up routes
 	router := route.SetupRouter(fHnldr, &cfg)
+
+	port := cfg.Port
+	if port == "" {
+		log.Fatal("PORT environment variable is required")
+	}
+	if !strings.HasPrefix(port, ":") {
+		port = ":" + port
+	}
+
 	srv := &http.Server{
-		Addr:    ":8084",
-		Handler: router.Handler(),
+		Addr:    port,
+		Handler: router, // gin.Engine already implements http.Handler
 	}
 	// Start the server
 	startHttpServer(srv)
 
-	initGracefulShutdown(cancelFunc, dbConn, srv)
+	initGracefulShutdown(cancelFunc, srv)
 	<-rootCtx.Done()
 }
 
-func initGracefulShutdown(cancelFunc context.CancelFunc, dbConn *pgxpool.Pool, srv *http.Server) {
+func initGracefulShutdown(cancelFunc context.CancelFunc, srv *http.Server) {
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
@@ -62,9 +61,6 @@ func initGracefulShutdown(cancelFunc context.CancelFunc, dbConn *pgxpool.Pool, s
 	// kill -9 is syscall.SIGKILL but can't be caught, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-
-	// close db connection
-	dbConn.Close()
 
 	// shutdown server
 	// stopping http server

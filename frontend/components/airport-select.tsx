@@ -24,13 +24,16 @@ export default function AirportSelect({ label, value, onChange, placeholder }: A
   const controllerRef = useRef<AbortController | null>(null)
 
   const apiBase = useMemo(() => {
-    // Resolve a robust API base regardless of how NEXT_PUBLIC_BACKEND_URL is set.
+    // Resolve a robust API base from NEXT_PUBLIC_BACKEND_URL.
     // Supported examples:
-    // - http://localhost:8084                -> http://localhost:8084/api
-    // - http://localhost:8084/               -> http://localhost:8084/api
-    // - http://localhost:8084/api            -> http://localhost:8084/api
-    // - http://localhost:8080/api/flights    -> http://localhost:8080/api
-    const raw = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8084"
+    // - https://api.yourdomain.com           -> https://api.yourdomain.com/api
+    // - https://api.yourdomain.com/          -> https://api.yourdomain.com/api
+    // - https://api.yourdomain.com/api       -> https://api.yourdomain.com/api
+    const raw = process.env.NEXT_PUBLIC_BACKEND_URL
+    if (!raw) {
+      console.error("NEXT_PUBLIC_BACKEND_URL environment variable is not set")
+      return ""
+    }
     try {
       const u = new URL(raw)
       // If path already contains /api, normalize to that root; otherwise append /api

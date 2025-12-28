@@ -189,11 +189,17 @@ export default function FlightsPage() {
 
       try {
         // Build API base similar to AirportSelect normalization
-        const raw = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8084'
+        const raw = process.env.NEXT_PUBLIC_BACKEND_URL
+        if (!raw) {
+          throw new Error("NEXT_PUBLIC_BACKEND_URL environment variable is not set")
+        }
         let apiBase = ''
         try {
           const u = new URL(raw)
-          apiBase = `${u.origin}/api`
+          const path = u.pathname.replace(/\/$/, '')
+          const hasApi = path === '/api' || path.startsWith('/api/')
+          const basePath = hasApi ? '/api' : '/api'
+          apiBase = `${u.origin}${basePath}`
         } catch {
           const origin = raw.replace(/\/$/, '')
           apiBase = /\/api(\/|$)/.test(origin) ? origin.replace(/\/api(?:\/.*)?$/, '/api') : `${origin}/api`
