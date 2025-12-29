@@ -1,15 +1,8 @@
-/** @type {import('next').NextConfig} */
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: ['localhost'],
-  },
-  // Allow cross-origin requests during development
-  experimental: {
-    allowedDevOrigins: ['localhost'],
-  },
+  /* config options here */
 }
-
-require('dotenv').config({path: 'backend/.env'})
 
 module.exports = nextConfig
