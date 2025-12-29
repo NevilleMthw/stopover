@@ -30,7 +30,7 @@ func StartServer() {
 	fHnldr := handler.NewFlightHandler(fClient, &cfg)
 
 	// Set up routes
-	router := route.SetupRouter(fHnldr, &cfg)
+	router := route.SetupRouter(fHnldr)
 
 	port := cfg.Port
 	if port == "" {
