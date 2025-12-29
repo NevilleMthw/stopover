@@ -1,10 +1,7 @@
 {
   "functions": {
     "api/index.go": {
-      "runtime": "go1.x"
+      "runtime": "go@latest"
     }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.go" }
-  ]
+  }
 }
