@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// func SetupRouter(handler *handler.Handler, cfg config.Config, authMiddleware gin.HandlerFunc) *gin.Engine {
 func SetupRouter(fhandler *handler.FlightHandler) *gin.Engine {
 	router := gin.Default()
 
