@@ -1,57 +1,87 @@
 package config
 
 import (
+	"fmt"
 	"log"
-	"os"
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
-	AviaSalesConfig AviaSalesConfig
+	DBHost             string          `mapstructure:"DB_HOST"`
+	DBPort             string          `mapstructure:"DB_PORT"`
+	DBUser             string          `mapstructure:"DB_USER"`
+	DBPassword         string          `mapstructure:"DB_PASSWORD"`
+	DBName             string          `mapstructure:"DB_NAME"`
+	Port               string          `mapstructure:"PORT"`
+	SecretKey          string          `mapstructure:"SECRET_KEY"`
+	RedisRoleAccessKey string          `mapstructure:"ROLE_ACCESS_KEY"`
+	RedisHostPort      string          `mapstructure:"REDIS_HOST_PORT"`
+	AviaSalesConfig    AviaSalesConfig `mapstructure:",squash"`
 }
 
 type AviaSalesConfig struct {
-	InitSearchURL   string
-	ResultSearchURL string
-	AviaSalesToken  string
-	AviaSalesMarker string
-	AviaSalesHost   string
+	InitSearchURL   string `mapstructure:"INIT_SEARCH_URL"`
+	ResultSearchURL string `mapstructure:"RESULT_SEARCH_URL"`
+	AviaSalesToken  string `mapstructure:"AVIASALES_TOKEN"`
+	AviaSalesMarker string `mapstructure:"AVIASALES_MARKER"`
+	AviaSalesHost   string `mapstructure:"AVIASALES_HOST"`
 }
 
 var AppConfig Config
 
 func LoadConfig() {
-	// Read from environment variables
-	AppConfig = Config{
-		AviaSalesConfig: AviaSalesConfig{
-			InitSearchURL:   getEnv("INIT_SEARCH_URL", ""),
-			ResultSearchURL: getEnv("RESULT_SEARCH_URL", ""),
-			AviaSalesToken:  getEnv("AVIASALES_TOKEN", ""),
-			AviaSalesMarker: getEnv("AVIASALES_MARKER", ""),
-			AviaSalesHost:   getEnv("AVIASALES_HOST", ""),
-		},
+
+	viper.SetConfigFile("/home/nevillemthw/Desktop/stopover/backend/.env")
+	viper.AutomaticEnv()
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Printf("Error reading config file: %s", err)
+		log.Println("Using environment variables only")
 	}
 
-	// Validate required fields
-	if AppConfig.AviaSalesConfig.InitSearchURL == "" {
-		log.Println("Warning: INIT_SEARCH_URL not set")
+	// Handle PORT separately
+	portValue := viper.GetString("PORT")
+	if strings.Contains(portValue, ":") {
+		parts := strings.Split(portValue, ":")
+		if len(parts) == 2 {
+			viper.Set("HOST", parts[0])
+			portValue = parts[1]
+		}
 	}
-	if AppConfig.AviaSalesConfig.ResultSearchURL == "" {
-		log.Println("Warning: RESULT_SEARCH_URL not set")
+	port, err := strconv.Atoi(portValue)
+	if err != nil {
+		log.Printf("Invalid PORT value: %s. Using default 8080", portValue)
+		port = 8080
 	}
-	if AppConfig.AviaSalesConfig.AviaSalesToken == "" {
-		log.Println("Warning: AVIASALES_TOKEN not set")
-	}
-	if AppConfig.AviaSalesConfig.AviaSalesMarker == "" {
-		log.Println("Warning: AVIASALES_MARKER not set")
-	}
-	if AppConfig.AviaSalesConfig.AviaSalesHost == "" {
-		log.Println("Warning: AVIASALES_HOST not set")
-	}
-}
+	viper.Set("PORT", port)
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
+	// Unmarshal config
+	err = viper.Unmarshal(&AppConfig)
+	if err != nil {
+		panic(fmt.Errorf("fatal error when unmarshaling config: %s", err))
 	}
-	return defaultValue
+
+	// Override config with environment variables
+	t := reflect.TypeOf(AppConfig)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		envKey := field.Tag.Get("mapstructure")
+		if envKey != "" && envKey != "PORT" { // Skip PORT as we've already handled it
+			envVal := viper.GetString(envKey)
+			if envVal != "" {
+				viper.Set(envKey, envVal)
+			}
+		}
+	}
+
+	// Re-unmarshal to ensure all values are updated
+	err = viper.Unmarshal(&AppConfig)
+	if err != nil {
+		panic(fmt.Errorf("fatal error when re-unmarshaling config: %s", err))
+	}
 }
