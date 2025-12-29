@@ -1,21 +1,29 @@
 package route
 
 import (
-	"stopover.backend/config"
 	"stopover.backend/internal/api/handler"
 
 	"github.com/gin-gonic/gin"
 )
 
 // func SetupRouter(handler *handler.Handler, cfg config.Config, authMiddleware gin.HandlerFunc) *gin.Engine {
-func SetupRouter(fhandler *handler.FlightHandler, cfg *config.Config) *gin.Engine {
+func SetupRouter(fhandler *handler.FlightHandler) *gin.Engine {
 	router := gin.Default()
 
-	// Minimal CORS for frontend dev
+	// Enhanced CORS middleware
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := c.Request.Header.Get("Origin")
+		// Allow your production and development domains
+		if origin == "https://stopover.in" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
@@ -30,8 +38,9 @@ func SetupRouter(fhandler *handler.FlightHandler, cfg *config.Config) *gin.Engin
 		api.GET("/flights", fhandler.SearchFlightsAPI)
 	}
 
-	// legacy flight group (kept as-is)
+	// legacy flight group
 	flt := router.Group("/flight")
 	flt.POST("/search", fhandler.SearchFlight)
+
 	return router
 }
