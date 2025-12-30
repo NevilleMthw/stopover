@@ -172,7 +172,7 @@ func (f *FlightHandler) AirportsAutocomplete(c *gin.Context) {
 	}
 
 	// Aviasales autocomplete public endpoint (no auth required)
-	url := "https://autocomplete.travelpayouts.com/places2?types[]=airport&locale=en&term=" + q
+	url := "https://autocomplete.travelpayouts.com/places2?types[]=airport&types[]=city&locale=en&term=" + q
 
 	resp, err := http.Get(url)
 	if err != nil {
