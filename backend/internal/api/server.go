@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -27,10 +28,10 @@ func StartServer() {
 		cfg.AviaSalesConfig.AviaSalesMarker,
 		cfg.AviaSalesConfig.AviaSalesHost, &cfg)
 
-	fHnldr := handler.NewFlightHandler(fClient, &cfg)
+	fHandler := handler.NewFlightHandler(fClient, &cfg)
 
 	// Set up routes
-	router := route.SetupRouter(fHnldr)
+	router := route.SetupRouter(fHandler)
 
 	port := cfg.Port
 	if port == "" {
@@ -53,12 +54,11 @@ func StartServer() {
 
 func initGracefulShutdown(cancelFunc context.CancelFunc, srv *http.Server) {
 
-	// Wait for interrupt signal to gracefully shutdown the server with
+	// Wait for interrupt signal to gracefully shut down the server with
 	// a timeout of 5 seconds.
 	quit := make(chan os.Signal, 1)
 	// kill (no params) by default sends syscall.SIGTERM
 	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be caught, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
@@ -79,7 +79,7 @@ func startHttpServer(srv *http.Server) {
 
 	go func() {
 		// service connections
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()

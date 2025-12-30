@@ -268,9 +268,9 @@ func (c *Client) GetSearchResultsWithPolling(ctx context.Context, searchID strin
 			// We found proposals, return the result
 			log.Printf("[GetSearchResultsWithPolling] Found %d proposals on attempt %d", len(result.Proposals), attempt)
 			return result, nil
-		} else {
-			log.Printf("[GetSearchResultsWithPolling] No proposals found on attempt %d, continuing polling", attempt)
 		}
+
+		log.Printf("[GetSearchResultsWithPolling] No proposals found on attempt %d, continuing polling", attempt)
 
 		// Wait before the next attempt, but check if context is done first
 		select {

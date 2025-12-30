@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Request structures
+// PassengerInfo Request structures
 type PassengerInfo struct {
 	Adults   int `json:"adults"`
 	Children int `json:"children"`
@@ -29,7 +29,7 @@ type FlightSearchRequest struct {
 	Segments   []Segment     `json:"segments"`
 }
 
-// Response structures
+// FlightSearchInitResponse Response structures
 type FlightSearchInitResponse struct {
 	SearchID string `json:"search_id"`
 	UUID     string `json:"uuid"`
@@ -43,7 +43,7 @@ type FlightSearchResponseWrapper struct {
 	Currency  string             `json:"currency,omitempty"`
 }
 
-// Core flight data structures
+// Proposal Core flight data structures
 type Proposal struct {
 	Terms         map[string]TermData `json:"terms"`
 	Segment       []FlightSegment     `json:"segment"`
@@ -58,7 +58,7 @@ type FlexibleURL struct {
 	Value interface{}
 }
 
-// UnmarshalJSON implements custom unmarshaling for FlexibleURL
+// UnmarshalJSON implements custom unmarshalling for FlexibleURL
 func (f *FlexibleURL) UnmarshalJSON(data []byte) error {
 	// First try to unmarshal as string
 	var str string
@@ -125,7 +125,7 @@ type Flight struct {
 	TripClass        string `json:"trip_class"`
 }
 
-// Metadata structures
+// Airport Metadata structures
 type Airport struct {
 	Name        string `json:"name"`
 	City        string `json:"city"`
