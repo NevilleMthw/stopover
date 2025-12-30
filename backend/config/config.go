@@ -24,7 +24,7 @@ var AppConfig Config
 
 func LoadConfig() {
 	// Load .env file
-	err := godotenv.Load("/home/nevillemthw/Desktop/stopover/backend/.env")
+	err := godotenv.Load()
 	if err != nil {
 		log.Printf("Error reading .env file: %s", err)
 		log.Println("Using environment variables only")
@@ -32,7 +32,7 @@ func LoadConfig() {
 
 	// Load configuration from environment variables
 	AppConfig = Config{
-		Port: getEnv("PORT", ""),
+		Port: getEnv("PORT", "8080"),
 		AviaSalesConfig: AviaSalesConfig{
 			InitSearchURL:   getEnv("INIT_SEARCH_URL", ""),
 			ResultSearchURL: getEnv("RESULT_SEARCH_URL", ""),
