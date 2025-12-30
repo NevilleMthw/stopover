@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(fhandler *handler.FlightHandler) *gin.Engine {
+func SetupRouter(handler *handler.FlightHandler) *gin.Engine {
 	router := gin.Default()
 
 	// Enhanced CORS middleware
@@ -33,13 +33,13 @@ func SetupRouter(fhandler *handler.FlightHandler) *gin.Engine {
 	// API group
 	api := router.Group("/api")
 	{
-		api.GET("/airports/autocomplete", fhandler.AirportsAutocomplete)
-		api.GET("/flights", fhandler.SearchFlightsAPI)
+		api.GET("/airports/autocomplete", handler.AirportsAutocomplete)
+		api.GET("/flights", handler.SearchFlightsAPI)
 	}
 
 	// legacy flight group
 	flt := router.Group("/flight")
-	flt.POST("/search", fhandler.SearchFlight)
+	flt.POST("/search", handler.SearchFlight)
 
 	return router
 }

@@ -1,45 +1,52 @@
 package config
 
 import (
-	"fmt"
+	"log"
+	"os"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Port            string `mapstructure:"PORT"`
-	AviasalesToken  string `mapstructure:"AVIASALES_TOKEN"`
-	AviasalesMarker string `mapstructure:"AVIASALES_MARKER"`
-	AviasalesHost   string `mapstructure:"AVIASALES_HOST"`
-	InitSearchURL   string `mapstructure:"INIT_SEARCH_URL"`
-	ResultSearchURL string `mapstructure:"RESULT_SEARCH_URL"`
+	Port            string
+	AviaSalesConfig AviaSalesConfig
 }
 
-func LoadConfig() (*Config, error) {
-	// Set default port
-	viper.SetDefault("PORT", "8080")
+type AviaSalesConfig struct {
+	InitSearchURL   string
+	ResultSearchURL string
+	AviaSalesToken  string
+	AviaSalesMarker string
+	AviaSalesHost   string
+}
 
-	// Read from environment variables
-	viper.AutomaticEnv()
+var AppConfig Config
 
-	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
-		return nil, fmt.Errorf("unable to decode config: %w", err)
-	}
-
-	// Validate required variables
-	if config.AviasalesToken == "" {
-		return nil, fmt.Errorf("AVIASALES_TOKEN is required")
-	}
-	if config.AviasalesHost == "" {
-		return nil, fmt.Errorf("AVIASALES_HOST is required")
-	}
-	if config.InitSearchURL == "" {
-		return nil, fmt.Errorf("INIT_SEARCH_URL is required")
-	}
-	if config.ResultSearchURL == "" {
-		return nil, fmt.Errorf("RESULT_SEARCH_URL is required")
+func LoadConfig() {
+	// Load .env file
+	err := godotenv.Load("/home/nevillemthw/Desktop/stopover/backend/.env")
+	if err != nil {
+		log.Printf("Error reading .env file: %s", err)
+		log.Println("Using environment variables only")
 	}
 
-	return &config, nil
+	// Load configuration from environment variables
+	AppConfig = Config{
+		Port: getEnv("PORT", ""),
+		AviaSalesConfig: AviaSalesConfig{
+			InitSearchURL:   getEnv("INIT_SEARCH_URL", ""),
+			ResultSearchURL: getEnv("RESULT_SEARCH_URL", ""),
+			AviaSalesToken:  getEnv("AVIASALES_TOKEN", ""),
+			AviaSalesMarker: getEnv("AVIASALES_MARKER", ""),
+			AviaSalesHost:   getEnv("AVIASALES_HOST", ""),
+		},
+	}
+}
+
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
 }
